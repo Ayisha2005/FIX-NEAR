@@ -45,3 +45,6 @@ def create_app():
         }
 
     return app
+
+# Expose app at package level so 'gunicorn app:app' works directly
+app = create_app()
