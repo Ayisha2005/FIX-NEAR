@@ -1,0 +1,43 @@
+# Node dependencies
+node_modules/
+frontend/node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+frontend/dist/
+build/
+
+# Python / Flask
+__pycache__/
+backend/__pycache__/
+backend/app/__pycache__/
+backend/app/routes/__pycache__/
+backend/app/utils/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Local databases & logs
+*.db
+backend/*.db
+*.log
+backend/*.log
+
+# Environment variables
+.env
+backend/.env
+frontend/.env
+
+# IDE & System
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
