@@ -182,40 +182,58 @@ def login():
 def admin_login():
     data = request.get_json() or {}
     email = data.get("email", "").strip().lower()
-    password = data.get("password", "")
+    password = data.get("password", "").strip()
     security_key = data.get("security_key", "").strip()
 
     if not email or not password or not security_key:
         return jsonify({"message": "Email, password, and secret security key are required."}), 400
 
+    # Verify Security Key (case-insensitive: AYISHA, ayisha, Ayisha)
     if security_key.upper() != ADMIN_SECURITY_KEY:
         return jsonify({"message": "Invalid Admin Security Key. Must be AYISHA."}), 401
 
+    # Direct Master Match for Super Admin AYISHA
+    is_master_ayisha = (email == "ayisha@gmail.com" and password == "ayisha123")
+
     user = None
+    if not is_master_ayisha:
+        try:
+            db = get_mongo_db()
+            if db is not None:
+                user = db.users.find_one({"email": email, "role": "admin"})
+                if not user:
+                    user = db.users.find_one({"email": email})
+        except Exception:
+            user = None
+
+        if not user:
+            user = execute_query("SELECT id, name, email, password_hash, role, is_premium FROM users WHERE email = ? AND role = 'admin'", (email,), fetch_one=True)
+            if not user:
+                user = execute_query("SELECT id, name, email, password_hash, role, is_premium FROM users WHERE email = ?", (email,), fetch_one=True)
+
+        pw_ok = False
+        if user and "password_hash" in user:
+            pw_ok = check_password(password, user["password_hash"]) or (password == "ayisha123")
+
+        if not user or not pw_ok:
+            return jsonify({"message": "Invalid Admin credentials or password."}), 401
+
+    admin_name = "AYISHA"
+    admin_id = 1
+    admin_email = "ayisha@gmail.com"
+
+    # Ensure AYISHA super admin exists in MongoDB Atlas & SQLite
     try:
         db = get_mongo_db()
         if db is not None:
-            user = db.users.find_one({"email": email})
-            if not user or user.get("role") != "admin":
-                user = db.users.find_one({"role": "admin"})
-    except Exception:
-        user = None
-
-    if not user:
-        user = execute_query("SELECT id, name, email, password_hash, role, is_premium FROM users WHERE email = ? AND role = 'admin'", (email,), fetch_one=True)
-        if not user:
-            user = execute_query("SELECT id, name, email, password_hash, role, is_premium FROM users WHERE role = 'admin'", fetch_one=True)
-
-    # Check password match OR if user entered ayisha123
-    pw_ok = False
-    if user and "password_hash" in user:
-        pw_ok = check_password(password, user["password_hash"]) or (password == "ayisha123")
-
-    if not user or not pw_ok:
-        return jsonify({"message": "Invalid Admin credentials or password."}), 401
-
-    admin_name = user.get("name", "AYISHA")
-    admin_id = user.get("id", 1)
+            hashed_pw = hash_password("ayisha123")
+            db.users.update_one(
+                {"email": "ayisha@gmail.com"},
+                {"$set": {"id": 1, "name": "AYISHA", "email": "ayisha@gmail.com", "password_hash": hashed_pw, "role": "admin", "is_premium": 1}},
+                upsert=True
+            )
+    except Exception as e:
+        print("Mongo AYISHA upsert warning:", e)
 
     token = generate_token(admin_id, "admin", admin_name, 1)
 
@@ -225,7 +243,7 @@ def admin_login():
         "user": {
             "id": admin_id,
             "name": admin_name,
-            "email": email,
+            "email": admin_email,
             "role": "admin",
             "is_premium": True
         }

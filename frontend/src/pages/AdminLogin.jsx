@@ -8,9 +8,9 @@ export default function AdminLogin() {
   const navigate = useNavigate();
   const { setUser, setToken } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [securityKey, setSecurityKey] = useState('');
+  const [email, setEmail] = useState('ayisha@gmail.com');
+  const [password, setPassword] = useState('ayisha123');
+  const [securityKey, setSecurityKey] = useState('AYISHA');
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,9 +22,9 @@ export default function AdminLogin() {
 
     try {
       const res = await authApi.adminLogin({
-        email,
-        password,
-        security_key: securityKey
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
+        security_key: securityKey.trim()
       });
 
       const { token, user } = res.data;
@@ -35,10 +35,17 @@ export default function AdminLogin() {
 
       navigate('/admin');
     } catch (err) {
+      console.error("Admin login error:", err);
       setError(err.response?.data?.message || 'Invalid Admin Credentials or Security Key.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleQuickFill = () => {
+    setEmail('ayisha@gmail.com');
+    setPassword('ayisha123');
+    setSecurityKey('AYISHA');
   };
 
   return (
@@ -106,6 +113,16 @@ export default function AdminLogin() {
               className="w-full bg-slate-950 border border-purple-800/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500 font-mono font-bold tracking-widest"
               required
             />
+          </div>
+
+          <div className="flex items-center justify-between pt-1">
+            <button
+              type="button"
+              onClick={handleQuickFill}
+              className="text-[11px] text-purple-400 hover:text-purple-300 font-semibold underline"
+            >
+              Fill AYISHA Admin Credentials
+            </button>
           </div>
 
           <button
