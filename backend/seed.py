@@ -37,12 +37,12 @@ def seed_database():
     ]
     cursor.executemany("INSERT INTO categories (id, name, icon, description) VALUES (?, ?, ?, ?)", categories)
 
-    admin_pw = hash_password("admin123")
+    ayisha_pw = hash_password("ayisha123")
     cust_pw = hash_password("customer123")
     prem_pw = hash_password("premium123")
     prov_pw = hash_password("provider123")
 
-    cursor.execute("INSERT INTO users (id, name, email, password_hash, role, is_premium) VALUES (1, 'HomeServe Admin India', 'admin@homeserve.com', ?, 'admin', 1)", (admin_pw,))
+    cursor.execute("INSERT INTO users (id, name, email, password_hash, role, is_premium) VALUES (1, 'AYISHA', 'ayisha@gmail.com', ?, 'admin', 1)", (ayisha_pw,))
     cursor.execute("INSERT INTO users (id, name, email, password_hash, role, is_premium) VALUES (2, 'Arun Kumar', 'alex@example.com', ?, 'customer', 0)", (cust_pw,))
     cursor.execute("INSERT INTO users (id, name, email, password_hash, role, is_premium) VALUES (3, 'Priya Sharma', 'sarah@example.com', ?, 'customer', 1)", (prem_pw,))
 
@@ -81,7 +81,7 @@ def seed_database():
             db.categories.insert_many(cat_objs)
             db.counters.insert_one({"_id": "categories", "seq": 8})
 
-            db.users.insert_one({"id": 1, "name": "HomeServe Admin India", "email": "admin@homeserve.com", "password_hash": admin_pw, "role": "admin", "is_premium": 1})
+            db.users.insert_one({"id": 1, "name": "AYISHA", "email": "ayisha@gmail.com", "password_hash": ayisha_pw, "role": "admin", "is_premium": 1})
             db.users.insert_one({"id": 2, "name": "Arun Kumar", "email": "alex@example.com", "password_hash": cust_pw, "role": "customer", "is_premium": 0})
             db.users.insert_one({"id": 3, "name": "Priya Sharma", "email": "sarah@example.com", "password_hash": prem_pw, "role": "customer", "is_premium": 1})
 
@@ -96,7 +96,7 @@ def seed_database():
 
             db.counters.insert_one({"_id": "users", "seq": 6})
             db.counters.insert_one({"_id": "providers", "seq": 3})
-            print("MongoDB Atlas seeded successfully.")
+            print("MongoDB Atlas seeded successfully with AYISHA Super Admin credentials.")
         except Exception as e:
             print("MongoDB Atlas seed warning:", e)
 

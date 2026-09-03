@@ -26,7 +26,6 @@ API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token expired or invalid
       localStorage.removeItem('homeserve_token');
       localStorage.removeItem('homeserve_user');
     }
@@ -36,6 +35,7 @@ API.interceptors.response.use(
 
 export const authApi = {
   login: (credentials) => API.post('/auth/login', credentials),
+  adminLogin: (credentials) => API.post('/auth/admin-login', credentials),
   register: (userData) => API.post('/auth/register', userData),
   getMe: () => API.get('/auth/me'),
 };
@@ -69,8 +69,10 @@ export const premiumApi = {
 
 export const adminApi = {
   getStats: () => API.get('/admin/stats'),
+  getLogs: () => API.get('/admin/logs'),
   getUsers: (role) => API.get('/admin/users', { params: { role } }),
   toggleUserPremium: (id) => API.put(`/admin/users/${id}/toggle-premium`),
+  deleteUser: (id) => API.delete(`/admin/users/${id}`),
 };
 
 export default API;

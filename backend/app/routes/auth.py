@@ -5,6 +5,8 @@ from app.utils.auth_decorator import generate_token, token_required
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
+ADMIN_SECURITY_KEY = "AYISHA"
+
 @auth_bp.route("/register", methods=["POST"])
 def register():
     data = request.get_json() or {}
@@ -12,20 +14,14 @@ def register():
     email = data.get("email", "").strip().lower()
     password = data.get("password", "")
     role = data.get("role", "customer").lower()
-    
-    # Provider extra fields
-    category_id = int(data.get("category_id", 1)) if data.get("category_id") else 1
-    phone = data.get("phone", "+91 98400 11223")
-    bio = data.get("bio", "Professional home service provider dedicated to quality home care in India.")
-    hourly_rate = float(data.get("hourly_rate", 500.0))
-    experience_years = int(data.get("experience_years", 3))
-    location = data.get("location", "Chennai, Tamil Nadu")
-    services_offered = data.get("services_offered", "Standard home repair & maintenance")
+
+    if role == "admin":
+        return jsonify({"message": "Admin registration is strictly restricted. Contact system super administrator."}), 403
 
     if not name or not email or not password:
         return jsonify({"message": "Name, email, and password are required."}), 400
 
-    if role not in ["customer", "provider", "admin"]:
+    if role not in ["customer", "provider"]:
         return jsonify({"message": "Invalid role specified."}), 400
 
     # Check existence in Mongo or SQLite
@@ -72,6 +68,14 @@ def register():
     )
 
     if role == "provider":
+        category_id = int(data.get("category_id", 1)) if data.get("category_id") else 1
+        phone = data.get("phone", "+91 98400 11223")
+        bio = data.get("bio", "Professional home service provider dedicated to quality home care in India.")
+        hourly_rate = float(data.get("hourly_rate", 500.0))
+        experience_years = int(data.get("experience_years", 3))
+        location = data.get("location", "Chennai, Tamil Nadu")
+        services_offered = data.get("services_offered", "Standard home repair & maintenance")
+
         provider_id = get_next_sequence("providers")
         category_name = "General Maintenance"
         try:
@@ -156,6 +160,9 @@ def login():
     if not user or not check_password(password, user["password_hash"]):
         return jsonify({"message": "Invalid email or password."}), 401
 
+    if user.get("role") == "admin":
+        return jsonify({"message": "Admin portal access requires secret URL and security key."}), 403
+
     token = generate_token(user["id"], user["role"], user["name"], user.get("is_premium", 0))
 
     return jsonify({
@@ -167,6 +174,48 @@ def login():
             "email": user["email"],
             "role": user["role"],
             "is_premium": bool(user.get("is_premium", 0))
+        }
+    }), 200
+
+
+@auth_bp.route("/admin-login", methods=["POST"])
+def admin_login():
+    data = request.get_json() or {}
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+    security_key = data.get("security_key", "").strip()
+
+    if not email or not password or not security_key:
+        return jsonify({"message": "Email, password, and secret security key are required."}), 400
+
+    if security_key != ADMIN_SECURITY_KEY:
+        return jsonify({"message": "Invalid Admin Security Key."}), 401
+
+    user = None
+    try:
+        db = get_mongo_db()
+        if db is not None:
+            user = db.users.find_one({"email": email, "role": "admin"})
+    except Exception:
+        user = None
+
+    if not user:
+        user = execute_query("SELECT id, name, email, password_hash, role, is_premium FROM users WHERE email = ? AND role = 'admin'", (email,), fetch_one=True)
+
+    if not user or not check_password(password, user["password_hash"]):
+        return jsonify({"message": "Invalid Admin credentials or security key."}), 401
+
+    token = generate_token(user["id"], "admin", user["name"], 1)
+
+    return jsonify({
+        "message": "Welcome Executive Admin AYISHA",
+        "token": token,
+        "user": {
+            "id": user["id"],
+            "name": user["name"],
+            "email": user["email"],
+            "role": "admin",
+            "is_premium": True
         }
     }), 200
 

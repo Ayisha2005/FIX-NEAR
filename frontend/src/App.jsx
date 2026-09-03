@@ -12,6 +12,7 @@ import ProviderProfile from './pages/ProviderProfile';
 import CustomerDashboard from './pages/CustomerDashboard';
 import ProviderDashboard from './pages/ProviderDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminLogin from './pages/AdminLogin';
 import PremiumSubscription from './pages/PremiumSubscription';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -32,6 +33,9 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
 
+              {/* Secret Admin Hidden Portal Route */}
+              <Route path="/secret-admin-portal" element={<AdminLogin />} />
+
               {/* Customer Dashboard */}
               <Route element={<ProtectedRoute allowedRoles={['customer', 'admin']} />}>
                 <Route path="/customer-dashboard" element={<CustomerDashboard />} />
@@ -42,7 +46,7 @@ export default function App() {
                 <Route path="/provider-dashboard" element={<ProviderDashboard />} />
               </Route>
 
-              {/* Admin Dashboard */}
+              {/* Admin Executive Dashboard */}
               <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                 <Route path="/admin" element={<AdminDashboard />} />
               </Route>
