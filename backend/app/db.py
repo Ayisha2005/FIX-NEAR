@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import time
 from pymongo import MongoClient
 from app.config import Config
 
@@ -10,7 +11,14 @@ def get_mongo_client():
     if _mongo_client is None:
         mongo_uri = Config.MONGO_URI
         print(f"Connecting to MongoDB Atlas at {mongo_uri[:35]}...")
-        _mongo_client = MongoClient(mongo_uri, tlsAllowInvalidCertificates=True, serverSelectionTimeoutMS=8000)
+        _mongo_client = MongoClient(
+            mongo_uri,
+            tlsAllowInvalidCertificates=True,
+            serverSelectionTimeoutMS=15000,
+            connectTimeoutMS=15000,
+            socketTimeoutMS=30000,
+            retryWrites=True
+        )
     return _mongo_client
 
 def check_mongo():
@@ -19,30 +27,45 @@ def check_mongo():
         client.admin.command("ping")
         return True
     except Exception as e:
-        print(f"MongoDB Atlas ping check warning ({e}). Using local SQLite fallback.")
-        return False
+        print(f"MongoDB Atlas ping check warning ({e}). Re-attempting connection...")
+        # Reset client to force reconnection
+        global _mongo_client
+        _mongo_client = None
+        try:
+            client = get_mongo_client()
+            client.admin.command("ping")
+            return True
+        except Exception as e2:
+            print(f"MongoDB Atlas reconnection failed ({e2}). Using local SQLite fallback.")
+            return False
 
 def get_mongo_db():
     try:
         client = get_mongo_client()
         return client["homeserve_db"]
-    except Exception:
+    except Exception as e:
+        print(f"get_mongo_db exception ({e})")
         return None
 
 def get_next_sequence(sequence_name):
-    # Try Mongo first
-    try:
-        db = get_mongo_db()
-        if db is not None:
-            seq = db.counters.find_one_and_update(
-                {"_id": sequence_name},
-                {"$inc": {"seq": 1}},
-                upsert=True,
-                return_document=True
-            )
-            if seq: return seq["seq"]
-    except Exception:
-        pass
+    # Always attempt Mongo sequence first
+    for attempt in range(2):
+        try:
+            db = get_mongo_db()
+            if db is not None:
+                seq = db.counters.find_one_and_update(
+                    {"_id": sequence_name},
+                    {"$inc": {"seq": 1}},
+                    upsert=True,
+                    return_document=True
+                )
+                if seq and "seq" in seq:
+                    return seq["seq"]
+        except Exception as e:
+            print(f"Mongo sequence attempt {attempt+1} error:", e)
+            global _mongo_client
+            _mongo_client = None
+            time.sleep(0.5)
 
     # SQLite sequence fallback
     res = execute_query(f"SELECT MAX(id) as max_id FROM {sequence_name}", fetch_one=True)
