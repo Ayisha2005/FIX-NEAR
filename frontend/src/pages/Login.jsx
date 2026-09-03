@@ -116,13 +116,13 @@ export default function Login() {
           <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 text-center">
             Quick Demo Login One-Click Fill:
           </span>
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
+          <div className="grid grid-cols-3 gap-2 text-[11px]">
             <button
               type="button"
               onClick={() => handleDemoFill('alex@example.com', 'customer123')}
               className="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-purple-500 text-slate-300 text-left truncate"
             >
-              <div className="font-bold text-white">Customer (Standard)</div>
+              <div className="font-bold text-white">Customer</div>
               <div className="text-[10px] text-slate-500">alex@example.com</div>
             </button>
             <button
@@ -130,7 +130,7 @@ export default function Login() {
               onClick={() => handleDemoFill('sarah@example.com', 'premium123')}
               className="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500 text-slate-300 text-left truncate"
             >
-              <div className="font-bold text-amber-400">Customer (Premium)</div>
+              <div className="font-bold text-amber-400">Premium</div>
               <div className="text-[10px] text-slate-500">sarah@example.com</div>
             </button>
             <button
@@ -138,16 +138,8 @@ export default function Login() {
               onClick={() => handleDemoFill('david.plumbing@homeserve.com', 'provider123')}
               className="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-teal-500 text-slate-300 text-left truncate"
             >
-              <div className="font-bold text-teal-400">Service Provider</div>
+              <div className="font-bold text-teal-400">Provider</div>
               <div className="text-[10px] text-slate-500">david.plumbing@...</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoFill('admin@homeserve.com', 'admin123')}
-              className="p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-purple-500 text-slate-300 text-left truncate"
-            >
-              <div className="font-bold text-purple-400">Platform Admin</div>
-              <div className="text-[10px] text-slate-500">admin@homeserve.com</div>
             </button>
           </div>
         </div>
